@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "alumnos" ADD COLUMN     "fechaInscripcion" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;

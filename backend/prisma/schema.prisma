@@ -1,0 +1,444 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RolUsuario {
+  ADMINISTRADOR
+  INSTRUCTOR
+  TUTOR
+}
+
+enum EstadoAlumno {
+  ACTIVO
+  INACTIVO
+  SUSPENDIDO
+}
+
+enum Genero {
+  MASCULINO
+  FEMENINO
+}
+
+enum DiaSemana {
+  LUNES
+  MARTES
+  MIERCOLES
+  JUEVES
+  VIERNES
+  SABADO
+  DOMINGO
+}
+
+enum EstadoEvento {
+  PLANEACION
+  EN_PROGRESO
+  COMPLETADO
+  CANCELADO
+}
+
+enum ResultadoExamen {
+  PENDIENTE
+  APROBADO
+  NO_APROBADO
+  NO_SE_PRESENTO
+}
+
+enum EstadoPago {
+  PENDIENTE
+  PAGADO
+  VENCIDO
+  EXONERADO
+}
+
+enum TipoConversacion {
+  COMPORTAMIENTO
+  PROGRESO
+  REUNION
+  PAGO
+  EXAMEN
+  AVISO_GENERAL
+  CONSULTA_TUTOR
+}
+
+enum EstadoConversacion {
+  ABIERTA
+  CERRADA
+}
+
+enum TipoComportamiento {
+  POSITIVO
+  NEGATIVO
+  NEUTRO
+}
+
+enum TipoMovimientoInventario {
+  ENTRADA
+  SALIDA
+  AJUSTE
+  VENTA
+  DEVOLUCION
+}
+
+enum EstadoVenta {
+  PENDIENTE
+  PAGADO
+  ENTREGADO
+  CANCELADO
+}
+
+model Usuario {
+  id            String     @id @default(uuid())
+  nombre        String
+  correo        String     @unique
+  passwordHash  String
+  rol           RolUsuario
+  disciplinas   String[]   @default([]) // solo aplica si rol = INSTRUCTOR
+  activo        Boolean    @default(true)
+  tutorId       String?    @unique
+  tutor         Tutor?     @relation(fields: [tutorId], references: [id])
+  createdAt     DateTime   @default(now())
+
+  mensajesEnviados      Mensaje[]
+  registrosComportamiento RegistroComportamiento[]
+  movimientosInventario   MovimientoInventario[]
+  conversacionesIniciadas Conversacion[]
+
+  @@map("usuarios")
+}
+
+model Tutor {
+  id        String   @id @default(uuid())
+  nombre    String
+  telefono  String
+  correo    String?  @unique
+  relacion  String   // padre, madre, tutor legal
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  usuario        Usuario?
+  alumnos        AlumnoTutor[]
+  conversaciones Conversacion[]
+
+  @@map("tutores")
+}
+
+model Disciplina {
+  id     String @id @default(uuid())
+  nombre String @unique
+
+  horarios Horario[]
+  cintas   Cinta[]
+  eventos  EventoCambioCinta[]
+
+  @@map("disciplinas")
+}
+
+model Horario {
+  id           String      @id @default(uuid())
+  disciplinaId String
+  disciplina   Disciplina  @relation(fields: [disciplinaId], references: [id])
+  nombre       String      // ej. "Grupo A"
+  dias         DiaSemana[] // uno o más días de la semana
+  horaInicio   String      // formato 24h "HH:MM", ej. "17:00"
+  horaFin      String      // formato 24h "HH:MM", ej. "18:00"
+  costoExtra   Decimal?    @db.Decimal(10, 2) // se cobra aparte SOLO si es un horario extra (no el principal) del alumno
+
+  alumnos AlumnoHorario[]
+
+  @@map("horarios")
+}
+
+// Un alumno puede estar en más de un horario (ej. horario extra que se cobra aparte)
+model AlumnoHorario {
+  id          String  @id @default(uuid())
+  alumnoId    String
+  alumno      Alumno  @relation(fields: [alumnoId], references: [id])
+  horarioId   String
+  horario     Horario @relation(fields: [horarioId], references: [id])
+  esPrincipal Boolean @default(false) // determina la disciplina base para la cinta actual
+
+  @@unique([alumnoId, horarioId])
+  @@map("alumno_horarios")
+}
+
+model Alumno {
+  id                 String       @id @default(uuid())
+  nombreCompleto     String
+  fechaNacimiento    DateTime
+  fechaInscripcion   DateTime     @default(now()) // día real que entró a la escuela, editable
+  genero             Genero?
+  tallaCinta         String?
+  tallaUniforme      String?
+  condicionesMedicas String?
+  estado             EstadoAlumno @default(ACTIVO)
+  createdAt          DateTime     @default(now())
+
+  horarios      AlumnoHorario[]
+  cintaActualId String?
+  cintaActual   Cinta?  @relation(fields: [cintaActualId], references: [id])
+
+  tutores                 AlumnoTutor[]
+  historialCintas         HistorialCinta[]
+  eventoCandidatos        EventoCandidato[]
+  periodoCandidatos       PeriodoCandidato[]
+  conversaciones          Conversacion[]
+  registrosComportamiento RegistroComportamiento[]
+  ventas                  Venta[]
+
+  @@map("alumnos")
+}
+
+// Tabla intermedia: un alumno puede tener varios tutores, y un tutor varios alumnos.
+// esPrincipal marca a quién se le manda la comunicación por default.
+model AlumnoTutor {
+  id          String  @id @default(uuid())
+  alumnoId    String
+  alumno      Alumno  @relation(fields: [alumnoId], references: [id])
+  tutorId     String
+  tutor       Tutor   @relation(fields: [tutorId], references: [id])
+  esPrincipal Boolean @default(false)
+
+  @@unique([alumnoId, tutorId])
+  @@map("alumno_tutores")
+}
+
+// Configuración de la escuela (nombre y logo). Fila única (singleton).
+model Escuela {
+  id      String  @id @default(uuid())
+  nombre  String  @default("Mi escuela")
+  logoUrl String?
+
+  @@map("escuela")
+}
+
+model Cinta {
+  id           String     @id @default(uuid())
+  nombre       String
+  orden        Int
+  disciplinaId String
+  disciplina   Disciplina @relation(fields: [disciplinaId], references: [id])
+  color1       String     @default("#FFFFFF") // franja izquierda
+  color2       String     @default("#FFFFFF") // franja central
+  color3       String     @default("#FFFFFF") // franja derecha
+
+  historial       HistorialCinta[]
+  alumnosActuales Alumno[]
+
+  @@map("cintas")
+}
+
+model HistorialCinta {
+  id              String   @id @default(uuid())
+  alumnoId        String
+  alumno          Alumno   @relation(fields: [alumnoId], references: [id])
+  cintaId         String
+  cinta           Cinta    @relation(fields: [cintaId], references: [id])
+  fechaObtencion  DateTime @default(now())
+  instructor      String?
+  eventoCandidatoId String? @unique
+  eventoCandidato   EventoCandidato? @relation(fields: [eventoCandidatoId], references: [id])
+
+  @@map("historial_cintas")
+}
+
+model EventoCambioCinta {
+  id           String       @id @default(uuid())
+  nombre       String
+  fechaExamen  DateTime
+  disciplinaId String
+  disciplina   Disciplina   @relation(fields: [disciplinaId], references: [id])
+  estado       EstadoEvento @default(PLANEACION)
+  createdAt    DateTime     @default(now())
+
+  candidatos EventoCandidato[]
+
+  @@map("eventos_cambio_cinta")
+}
+
+model EventoCandidato {
+  id                String          @id @default(uuid())
+  eventoId          String
+  evento            EventoCambioCinta @relation(fields: [eventoId], references: [id])
+  alumnoId          String
+  alumno            Alumno          @relation(fields: [alumnoId], references: [id])
+  cintaObjetivo     String
+  tallaCintaDefault String?
+  tallaConfirmada   String?
+  tutorConfirmo     Boolean         @default(false)
+  fechaConfirmacion DateTime?
+  presentaExamen    Boolean         @default(true) // independiente del resultado: ¿va a presentar o no?
+  resultado         ResultadoExamen @default(PENDIENTE)
+  pagoExamen        Boolean         @default(false)
+  notas             String?
+
+  historialGenerado HistorialCinta?
+
+  @@unique([eventoId, alumnoId])
+  @@map("evento_candidatos")
+}
+
+model PeriodoPago {
+  id             String   @id @default(uuid())
+  mesAnio        String   // formato "2026-08"
+  fechaLimite    DateTime
+  montoDefault   Decimal  @db.Decimal(10, 2)
+  estado         String   @default("ABIERTO")
+  createdAt      DateTime @default(now())
+
+  candidatos PeriodoCandidato[]
+
+  @@map("periodos_pago")
+}
+
+model PeriodoCandidato {
+  id            String     @id @default(uuid())
+  periodoId     String
+  periodo       PeriodoPago @relation(fields: [periodoId], references: [id])
+  alumnoId      String
+  alumno        Alumno     @relation(fields: [alumnoId], references: [id])
+  montoAPagar   Decimal    @db.Decimal(10, 2)
+  estadoPago    EstadoPago @default(PENDIENTE)
+  fechaPago     DateTime?
+  metodoPago    String?
+  comprobante   String?
+
+  @@unique([periodoId, alumnoId])
+  @@map("periodo_candidatos")
+}
+
+model Conversacion {
+  id                String             @id @default(uuid())
+  alumnoId          String
+  alumno            Alumno             @relation(fields: [alumnoId], references: [id])
+  tutorId           String
+  tutor             Tutor              @relation(fields: [tutorId], references: [id])
+  iniciadoPorId     String
+  iniciadoPor       Usuario            @relation(fields: [iniciadoPorId], references: [id])
+  tipo              TipoConversacion
+  asunto            String
+  estado            EstadoConversacion @default(ABIERTA)
+  createdAt         DateTime           @default(now())
+  fechaUltimaActividad DateTime        @default(now())
+
+  mensajes    Mensaje[]
+  registroComportamiento RegistroComportamiento?
+
+  @@map("conversaciones")
+}
+
+model Mensaje {
+  id             String       @id @default(uuid())
+  conversacionId String
+  conversacion   Conversacion @relation(fields: [conversacionId], references: [id])
+  emisorId       String
+  emisor         Usuario      @relation(fields: [emisorId], references: [id])
+  contenido      String
+  fechaEnvio     DateTime     @default(now())
+  leido          Boolean      @default(false)
+  fechaLectura   DateTime?
+
+  @@map("mensajes")
+}
+
+model RegistroComportamiento {
+  id                  String            @id @default(uuid())
+  alumnoId            String
+  alumno              Alumno            @relation(fields: [alumnoId], references: [id])
+  instructorId        String
+  instructor          Usuario           @relation(fields: [instructorId], references: [id])
+  tipo                TipoComportamiento
+  categoria           String
+  descripcion         String
+  fecha               DateTime          @default(now())
+  conversacionId      String?           @unique
+  conversacion        Conversacion?     @relation(fields: [conversacionId], references: [id])
+  requiereSeguimiento Boolean           @default(false)
+
+  @@map("registros_comportamiento")
+}
+
+model Producto {
+  id          String  @id @default(uuid())
+  nombre      String
+  categoria   String  // uniforme, proteccion, accesorios, cintas_fisicas
+  disciplina  String?
+  precioBase  Decimal @db.Decimal(10, 2)
+  activo      Boolean @default(true)
+
+  variantes VarianteProducto[]
+
+  @@map("productos")
+}
+
+model VarianteProducto {
+  id         String   @id @default(uuid())
+  productoId String
+  producto   Producto @relation(fields: [productoId], references: [id])
+  talla      String?
+  color      String?
+  sku        String   @unique
+  precio     Decimal  @db.Decimal(10, 2)
+
+  inventario  Inventario?
+  movimientos MovimientoInventario[]
+  detalleVenta DetalleVenta[]
+
+  @@map("variantes_producto")
+}
+
+model Inventario {
+  id                  String           @id @default(uuid())
+  varianteId          String           @unique
+  variante            VarianteProducto @relation(fields: [varianteId], references: [id])
+  stockActual         Int              @default(0)
+  stockMinimo         Int              @default(0)
+  ultimaActualizacion DateTime         @updatedAt
+
+  @@map("inventario")
+}
+
+model MovimientoInventario {
+  id          String                   @id @default(uuid())
+  varianteId  String
+  variante    VarianteProducto         @relation(fields: [varianteId], references: [id])
+  tipo        TipoMovimientoInventario
+  cantidad    Int
+  referencia  String?
+  fecha       DateTime                 @default(now())
+  usuarioId   String
+  usuario     Usuario                  @relation(fields: [usuarioId], references: [id])
+  nota        String?
+
+  @@map("movimientos_inventario")
+}
+
+model Venta {
+  id         String      @id @default(uuid())
+  alumnoId   String
+  alumno     Alumno      @relation(fields: [alumnoId], references: [id])
+  fecha      DateTime    @default(now())
+  total      Decimal     @db.Decimal(10, 2)
+  estado     EstadoVenta @default(PENDIENTE)
+  metodoPago String?
+
+  detalle DetalleVenta[]
+
+  @@map("ventas")
+}
+
+model DetalleVenta {
+  id              String           @id @default(uuid())
+  ventaId         String
+  venta           Venta            @relation(fields: [ventaId], references: [id])
+  varianteId      String
+  variante        VarianteProducto @relation(fields: [varianteId], references: [id])
+  cantidad        Int
+  precioUnitario  Decimal          @db.Decimal(10, 2)
+
+  @@map("detalle_venta")
+}
