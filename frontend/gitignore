@@ -1,0 +1,20 @@
+# Dependencias
+node_modules/
+
+# Compilado (Vite genera esto al hacer build)
+dist/
+
+# Variables de entorno (la URL del backend puede variar por ambiente, no se sube)
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Sistema operativo / editor
+.DS_Store
+.vscode/
+*.swp
