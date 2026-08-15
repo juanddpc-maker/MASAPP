@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import Accesos from './pages/Accesos';
 import Alumnos from './pages/Alumnos';
 import Tutores from './pages/Tutores';
 import Cintas from './pages/Cintas';
@@ -29,6 +30,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<RutaProtegida><Dashboard /></RutaProtegida>} />
+        <Route path="/accesos" element={<RutaProtegida><Accesos /></RutaProtegida>} />
         <Route path="/alumnos" element={<RutaProtegida><Alumnos /></RutaProtegida>} />
         <Route path="/tutores" element={<RutaProtegida><Tutores /></RutaProtegida>} />
         <Route path="/cintas" element={<RutaProtegida><Cintas /></RutaProtegida>} />

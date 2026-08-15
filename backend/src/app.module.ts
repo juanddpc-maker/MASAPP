@@ -18,6 +18,7 @@ import { HorariosModule } from './horarios/horarios.module';
 import { EmailModule } from './email/email.module';
 import { HistorialModule } from './historial-cintas/historial.module';
 import { CategoriasModule } from './categorias/categorias.module';
+import { LogsModule } from './logs/logs.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { CategoriasModule } from './categorias/categorias.module';
     HorariosModule,
     HistorialModule,
     CategoriasModule,
+    LogsModule,
   ],
 })
 export class AppModule {}

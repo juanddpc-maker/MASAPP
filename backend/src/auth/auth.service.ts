@@ -28,6 +28,11 @@ export class AuthService {
       tutorId: usuario.tutorId,
     };
 
+    // No bloquea el login si falla el registro del log — es informativo, no crítico
+    this.prisma.loginLog
+      .create({ data: { usuarioId: usuario.id, nombre: usuario.nombre, correo: usuario.correo, rol: usuario.rol } })
+      .catch(() => {});
+
     return {
       access_token: this.jwt.sign(payload),
       usuario: {

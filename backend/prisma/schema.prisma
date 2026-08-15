@@ -216,6 +216,31 @@ model Escuela {
   @@map("escuela")
 }
 
+// Registro de cada inicio de sesión exitoso
+model LoginLog {
+  id        String   @id @default(uuid())
+  usuarioId String
+  nombre    String
+  correo    String
+  rol       String
+  fecha     DateTime @default(now())
+
+  @@map("login_logs")
+}
+
+// Registro de cada petición al backend, para saber qué módulos se usan más.
+// Sin relaciones a propósito: es un log, no debe romperse si se edita/borra algo relacionado.
+model RequestLog {
+  id        String   @id @default(uuid())
+  usuarioId String?
+  nombre    String?
+  modulo    String
+  metodo    String
+  fecha     DateTime @default(now())
+
+  @@map("request_logs")
+}
+
 model Cinta {
   id           String     @id @default(uuid())
   nombre       String

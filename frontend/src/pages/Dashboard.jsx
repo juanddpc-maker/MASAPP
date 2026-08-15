@@ -17,14 +17,22 @@ function calcularEdad(fechaNacimiento) {
   return edad;
 }
 
+const MODULO_LABEL = {
+  alumnos: 'Alumnos', tutores: 'Tutores', cintas: 'Cintas', 'eventos-cambio-cinta': 'Cambio de cinta',
+  pagos: 'Pagos', conversaciones: 'Comunicación', comportamiento: 'Comportamiento', inventario: 'Inventario',
+  ventas: 'Ventas', usuarios: 'Usuarios', horarios: 'Horarios', disciplinas: 'Disciplinas',
+  categorias: 'Categorías', escuela: 'Escuela', 'historial-cintas': 'Historial de cintas',
+};
+
 export default function Dashboard() {
   const [alumnos, setAlumnos] = useState([]);
   const [periodos, setPeriodos] = useState([]);
+  const [usoModulos, setUsoModulos] = useState([]);
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    Promise.all([api.get('/alumnos'), api.get('/pagos/periodos')])
-      .then(([a, p]) => { setAlumnos(a.data); setPeriodos(p.data); })
+    Promise.all([api.get('/alumnos'), api.get('/pagos/periodos'), api.get('/logs/uso-modulos')])
+      .then(([a, p, u]) => { setAlumnos(a.data); setPeriodos(p.data); setUsoModulos(u.data); })
       .finally(() => setCargando(false));
   }, []);
 
@@ -213,6 +221,27 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+          )}
+        </Card>
+
+        <Card className="p-5 col-span-2">
+          <p className="text-sm font-medium text-gray-700 mb-3">Módulos más usados</p>
+          {usoModulos.length === 0 ? (
+            <p className="text-sm text-gray-400 py-10 text-center">Aún no hay suficiente actividad registrada.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={Math.max(180, usoModulos.length * 32)}>
+              <BarChart
+                data={usoModulos.map((m) => ({ ...m, nombre: MODULO_LABEL[m.modulo] || m.modulo }))}
+                layout="vertical"
+                margin={{ top: 4, right: 20, left: 20, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0efe9" />
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="nombre" width={110} tick={{ fontSize: 12, fill: '#374151' }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }} formatter={(v) => [`${v} peticiones`, '']} />
+                <Bar dataKey="cantidad" fill="#185fa5" radius={[0, 4, 4, 0]} maxBarSize={22} />
+              </BarChart>
+            </ResponsiveContainer>
           )}
         </Card>
       </div>

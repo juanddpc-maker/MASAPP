@@ -17,6 +17,7 @@ const menuItems = [
   { to: '/ventas', label: 'Ventas', icon: ShoppingCart, roles: ['ADMINISTRADOR'] },
   { to: '/usuarios', label: 'Usuarios', icon: ShieldCheck, roles: ['ADMINISTRADOR'] },
   { to: '/configuracion', label: 'Configuración', icon: Settings, roles: ['ADMINISTRADOR'] },
+  { to: '/accesos', label: 'Accesos', icon: KeyRound, roles: ['ADMINISTRADOR'] },
 ];
 
 export default function Layout({ children }) {
