@@ -17,6 +17,7 @@ import { DisciplinasModule } from './disciplinas/disciplinas.module';
 import { HorariosModule } from './horarios/horarios.module';
 import { EmailModule } from './email/email.module';
 import { HistorialModule } from './historial-cintas/historial.module';
+import { CategoriasModule } from './categorias/categorias.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { HistorialModule } from './historial-cintas/historial.module';
     DisciplinasModule,
     HorariosModule,
     HistorialModule,
+    CategoriasModule,
   ],
 })
 export class AppModule {}

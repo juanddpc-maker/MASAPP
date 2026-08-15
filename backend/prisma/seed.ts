@@ -78,6 +78,13 @@ async function main() {
     await prisma.escuela.create({ data: { nombre: 'Mi escuela de artes marciales' } });
   }
   console.log('Configuración de escuela inicial creada');
+
+  const categoriasDefault = ['Uniforme', 'Cascos', 'Espinilleras', 'Guantes'];
+  for (const nombre of categoriasDefault) {
+    const existe = await prisma.categoria.findUnique({ where: { nombre } });
+    if (!existe) await prisma.categoria.create({ data: { nombre } });
+  }
+  console.log('Categorías de inventario cargadas');
 }
 
 main()

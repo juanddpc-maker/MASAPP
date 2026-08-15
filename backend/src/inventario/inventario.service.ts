@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateProductoDto, CreateVarianteDto, MovimientoDto } from './dto/inventario.dto';
+import { CreateProductoDto, UpdateProductoDto, CreateVarianteDto, MovimientoDto } from './dto/inventario.dto';
 
 @Injectable()
 export class InventarioService {
@@ -8,21 +8,25 @@ export class InventarioService {
 
   findAllProductos() {
     return this.prisma.producto.findMany({
-      include: { variantes: { include: { inventario: true } } },
+      include: { categoria: true, variantes: { include: { inventario: true } } },
     });
   }
 
   async findOneProducto(id: string) {
     const producto = await this.prisma.producto.findUnique({
       where: { id },
-      include: { variantes: { include: { inventario: true } } },
+      include: { categoria: true, variantes: { include: { inventario: true } } },
     });
     if (!producto) throw new NotFoundException('Producto no encontrado');
     return producto;
   }
 
   createProducto(data: CreateProductoDto) {
-    return this.prisma.producto.create({ data });
+    return this.prisma.producto.create({ data, include: { categoria: true } });
+  }
+
+  updateProducto(id: string, data: UpdateProductoDto) {
+    return this.prisma.producto.update({ where: { id }, data: data as any, include: { categoria: true } });
   }
 
   // Crea la variante y su fila de inventario inicial en una sola operación
@@ -46,6 +50,10 @@ export class InventarioService {
     if (!inventario) throw new NotFoundException('Inventario no encontrado para esta variante');
 
     const delta = dto.tipo === 'ENTRADA' || dto.tipo === 'DEVOLUCION' ? dto.cantidad : -dto.cantidad;
+
+    if (delta < 0 && inventario.stockActual + delta < 0) {
+      throw new BadRequestException(`No hay suficiente stock: solo quedan ${inventario.stockActual} unidades`);
+    }
 
     await this.prisma.movimientoInventario.create({
       data: {

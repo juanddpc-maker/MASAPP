@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ShoppingCart, Plus } from 'lucide-react';
 import api from '../lib/api';
-import { Card, Table, EmptyState, PageHeader, Button, Select } from '../components/ui';
+import { Card, Table, EmptyState, PageHeader, Button, Select, Field, Input } from '../components/ui';
 
 export default function Ventas() {
   const [ventas, setVentas] = useState([]);
@@ -20,11 +20,29 @@ export default function Ventas() {
   }
   useEffect(cargar, []);
 
-  const variantes = productos.flatMap((p) => p.variantes.map((v) => ({ ...v, nombreProducto: p.nombre })));
+  // Solo variantes con stock disponible, mostrando talla + color + stock para diferenciarlas
+  const variantes = productos
+    .flatMap((p) => p.variantes.map((v) => ({ ...v, nombreProducto: p.nombre })))
+    .filter((v) => (v.inventario?.stockActual || 0) > 0);
+
+  const varianteSeleccionada = variantes.find((v) => v.id === varianteId);
+  const stockDisponible = varianteSeleccionada?.inventario?.stockActual || 0;
+
+  function labelVariante(v) {
+    const detalle = [v.talla && `Talla ${v.talla}`, v.color].filter(Boolean).join(' · ') || v.sku;
+    return `${v.nombreProducto} — ${detalle} ($${v.precio}) — Stock: ${v.inventario?.stockActual}`;
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+
+    if (!varianteId) { setError('Selecciona un producto'); return; }
+    if (Number(cantidad) > stockDisponible) {
+      setError(`Solo hay ${stockDisponible} en stock, no se puede vender ${cantidad}`);
+      return;
+    }
+
     try {
       await api.post('/ventas', { alumnoId, items: [{ varianteId, cantidad: Number(cantidad) }] });
       setMostrarForm(false);
@@ -46,20 +64,25 @@ export default function Ventas() {
       {mostrarForm && (
         <Card className="p-5 mb-6">
           <form onSubmit={handleSubmit} className="grid grid-cols-3 gap-3">
-            <Select value={alumnoId} onChange={(e) => setAlumnoId(e.target.value)} required>
-              <option value="">Alumno</option>
-              {alumnos.map((a) => <option key={a.id} value={a.id}>{a.nombreCompleto}</option>)}
-            </Select>
-            <Select value={varianteId} onChange={(e) => setVarianteId(e.target.value)} required>
-              <option value="">Producto</option>
-              {variantes.map((v) => (
-                <option key={v.id} value={v.id}>{v.nombreProducto} - {v.talla || v.sku} (${v.precio})</option>
-              ))}
-            </Select>
-            <input
-              type="number" min="1" value={cantidad} onChange={(e) => setCantidad(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
-            />
+            <Field label="Alumno">
+              <Select value={alumnoId} onChange={(e) => setAlumnoId(e.target.value)} required>
+                <option value="">Selecciona...</option>
+                {alumnos.map((a) => <option key={a.id} value={a.id}>{a.nombreCompleto}</option>)}
+              </Select>
+            </Field>
+            <Field label="Producto">
+              <Select value={varianteId} onChange={(e) => { setVarianteId(e.target.value); setCantidad(1); }} required>
+                <option value="">Selecciona...</option>
+                {variantes.map((v) => <option key={v.id} value={v.id}>{labelVariante(v)}</option>)}
+              </Select>
+              {variantes.length === 0 && <p className="text-xs text-amber-600 mt-1">No hay productos con stock disponible.</p>}
+            </Field>
+            <Field label={varianteSeleccionada ? `Cantidad (máx. ${stockDisponible})` : 'Cantidad'}>
+              <Input
+                type="number" min="1" max={stockDisponible || undefined}
+                value={cantidad} onChange={(e) => setCantidad(e.target.value)}
+              />
+            </Field>
             {error && <p className="col-span-3 text-sm text-red-600">{error}</p>}
             <div className="col-span-3 flex gap-2">
               <Button type="submit">Registrar</Button>

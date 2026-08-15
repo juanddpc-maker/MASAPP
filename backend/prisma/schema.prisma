@@ -362,13 +362,23 @@ model RegistroComportamiento {
   @@map("registros_comportamiento")
 }
 
+model Categoria {
+  id     String @id @default(uuid())
+  nombre String @unique
+
+  productos Producto[]
+
+  @@map("categorias")
+}
+
 model Producto {
-  id          String  @id @default(uuid())
+  id          String    @id @default(uuid())
   nombre      String
-  categoria   String  // uniforme, proteccion, accesorios, cintas_fisicas
+  categoriaId String
+  categoria   Categoria @relation(fields: [categoriaId], references: [id])
   disciplina  String?
-  precioBase  Decimal @db.Decimal(10, 2)
-  activo      Boolean @default(true)
+  precioBase  Decimal   @db.Decimal(10, 2)
+  activo      Boolean   @default(true)
 
   variantes VarianteProducto[]
 

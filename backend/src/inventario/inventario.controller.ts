@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Delete, Param, Body, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Req, UseGuards } from '@nestjs/common';
 import { InventarioService } from './inventario.service';
-import { CreateProductoDto, CreateVarianteDto, MovimientoDto } from './dto/inventario.dto';
+import { CreateProductoDto, UpdateProductoDto, CreateVarianteDto, MovimientoDto } from './dto/inventario.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -24,6 +24,11 @@ export class InventarioController {
   @Post('productos')
   createProducto(@Body() dto: CreateProductoDto) {
     return this.service.createProducto(dto);
+  }
+
+  @Put('productos/:id')
+  updateProducto(@Param('id') id: string, @Body() dto: UpdateProductoDto) {
+    return this.service.updateProducto(id, dto);
   }
 
   @Post('productos/:id/variantes')

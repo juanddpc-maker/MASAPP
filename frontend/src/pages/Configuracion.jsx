@@ -19,10 +19,16 @@ export default function Configuracion() {
   const [formHorario, setFormHorario] = useState(horarioVacio);
   const [editandoHorarioId, setEditandoHorarioId] = useState(null);
 
+  const [categorias, setCategorias] = useState([]);
+  const [nuevaCategoria, setNuevaCategoria] = useState('');
+  const [editandoCategoriaId, setEditandoCategoriaId] = useState(null);
+  const [nombreEditadoCategoria, setNombreEditadoCategoria] = useState('');
+
   function cargar() {
     api.get('/escuela').then((res) => setEscuela({ nombre: res.data.nombre, logoUrl: res.data.logoUrl || '' }));
     api.get('/disciplinas').then((res) => setDisciplinas(res.data));
     api.get('/horarios').then((res) => setHorarios(res.data));
+    api.get('/categorias').then((res) => setCategorias(res.data));
   }
   useEffect(cargar, []);
 
@@ -42,9 +48,13 @@ export default function Configuracion() {
   async function agregarDisciplina(e) {
     e.preventDefault();
     if (!nuevaDisciplina.trim()) return;
-    await api.post('/disciplinas', { nombre: nuevaDisciplina });
-    setNuevaDisciplina('');
-    cargar();
+    try {
+      await api.post('/disciplinas', { nombre: nuevaDisciplina });
+      setNuevaDisciplina('');
+      cargar();
+    } catch (err) {
+      alert(err.response?.data?.message || 'No se pudo agregar la disciplina. Si el problema persiste, cierra sesión y vuelve a entrar.');
+    }
   }
 
   function abrirEditarDisciplina(d) {
@@ -66,6 +76,41 @@ export default function Configuracion() {
       cargar();
     } catch {
       alert('No se puede eliminar: tiene horarios asociados');
+    }
+  }
+
+  // --- Categorías (inventario) ---
+  async function agregarCategoria(e) {
+    e.preventDefault();
+    if (!nuevaCategoria.trim()) return;
+    try {
+      await api.post('/categorias', { nombre: nuevaCategoria });
+      setNuevaCategoria('');
+      cargar();
+    } catch (err) {
+      alert(err.response?.data?.message || 'No se pudo agregar la categoría. Si el problema persiste, cierra sesión y vuelve a entrar.');
+    }
+  }
+
+  function abrirEditarCategoria(c) {
+    setEditandoCategoriaId(c.id);
+    setNombreEditadoCategoria(c.nombre);
+  }
+
+  async function guardarCategoriaEditada(id) {
+    if (!nombreEditadoCategoria.trim()) return;
+    await api.put(`/categorias/${id}`, { nombre: nombreEditadoCategoria });
+    setEditandoCategoriaId(null);
+    cargar();
+  }
+
+  async function eliminarCategoria(id) {
+    if (!confirm('¿Eliminar esta categoría?')) return;
+    try {
+      await api.delete(`/categorias/${id}`);
+      cargar();
+    } catch {
+      alert('No se puede eliminar: tiene productos asociados');
     }
   }
 
@@ -211,6 +256,38 @@ export default function Configuracion() {
           ))}
         </Table>
         {horarios.length === 0 && <p className="text-sm text-gray-400 mt-2">Aún no hay horarios.</p>}
+      </Card>
+
+      <Card className="p-6 max-w-lg">
+        <h2 className="font-medium text-gray-900 mb-4">Categorías de inventario</h2>
+        <form onSubmit={agregarCategoria} className="flex gap-2 mb-4">
+          <Input placeholder="Nombre (ej. Uniforme)" value={nuevaCategoria} onChange={(e) => setNuevaCategoria(e.target.value)} />
+          <Button type="submit">Agregar</Button>
+        </form>
+        <div className="space-y-1">
+          {categorias.map((c) => (
+            <div key={c.id} className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg text-sm">
+              {editandoCategoriaId === c.id ? (
+                <>
+                  <Input value={nombreEditadoCategoria} onChange={(e) => setNombreEditadoCategoria(e.target.value)} className="mr-2" />
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button onClick={() => guardarCategoriaEditada(c.id)} className="text-green-600 text-xs font-medium">Guardar</button>
+                    <button onClick={() => setEditandoCategoriaId(null)} className="text-gray-400"><X size={14} /></button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <span className="text-gray-900">{c.nombre}</span>
+                  <div className="flex gap-2">
+                    <button onClick={() => abrirEditarCategoria(c)} className="text-gray-400 hover:text-gray-900"><Pencil size={14} /></button>
+                    <button onClick={() => eliminarCategoria(c.id)} className="text-gray-400 hover:text-red-600"><Trash2 size={14} /></button>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+          {categorias.length === 0 && <p className="text-sm text-gray-400">Aún no hay categorías.</p>}
+        </div>
       </Card>
     </div>
   );

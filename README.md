@@ -44,23 +44,29 @@ de prueba rápido con `npx prisma studio` desde la carpeta backend).
 ## Qué ya está construido
 
 - Autenticación con JWT y roles (ADMINISTRADOR, INSTRUCTOR, TUTOR)
-- Módulo de Alumnos completo (crear, listar, ver, actualizar, dar de baja)
-  con reglas de permiso: un tutor solo ve a sus propios hijos
-- Esquema completo de base de datos (17 tablas) con Prisma, reflejando
-  el ERD: Alumnos, Tutores, Usuarios, Cintas, Eventos de cambio de cinta,
-  Pagos, Comunicación, Inventario y Ventas
+- **Alumnos**: alta, baja (lógica), edición, listado — un tutor solo ve a sus propios hijos
+- **Tutores**: alta, baja (bloqueada si tiene alumnos activos), edición, listado
+- **Usuarios**: alta de instructores/admins/tutores con acceso, baja lógica (desactivación)
+- **Cintas**: catálogo por disciplina, alta/baja/edición (solo admin)
+- **Eventos de cambio de cinta**: crear evento, agregar candidatos (precarga talla de cinta
+  desde el perfil del alumno), actualizar resultado — al aprobar, genera automáticamente
+  el registro en el historial de cintas del alumno
+- **Pagos**: periodos de pago mensuales, agregar candidatos, actualizar estado de pago
+- **Comunicación**: conversaciones por tema/hilo, mensajes, puede iniciar instructor o tutor
+- **Inventario**: productos, variantes con talla/color/SKU, control de stock con
+  bitácora de movimientos (entrada/salida/ajuste/venta/devolución)
+
+Cada módulo del backend sigue el mismo patrón (service + controller + module + dto),
+y cada pantalla del frontend sigue el mismo patrón de formulario + tabla + alta/baja.
 
 ## Qué falta por construir (siguiente paso natural)
 
-Cada uno de estos módulos sigue el mismo patrón que `alumnos/`
-(service + controller + module). Copia esa carpeta como plantilla:
+- Pantalla de detalle de alumno (para ver su historial de cintas, pagos y conversaciones juntos)
+- Pantalla de eventos de cambio de cinta en el frontend (el backend ya existe)
+- Gestión de variantes de producto desde el frontend (el backend ya existe)
+- Ventas y detalle de venta (conectar con inventario para descontar stock automático)
+- Registros de comportamiento (tabla ya existe en el esquema, falta exponerla en un módulo)
 
-- `tutores/`
-- `cintas/` y `eventos-cambio-cinta/`
-- `pagos/` (periodos de pago + candidatos)
-- `comunicacion/` (conversaciones + mensajes + registros de comportamiento)
-- `inventario/` (productos, variantes, stock, movimientos, ventas)
-- `usuarios/` (alta de instructores y tutores con acceso)
 
 ## Estrategia de deployment (cuando esté listo para salir de local)
 
