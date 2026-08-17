@@ -112,7 +112,7 @@ export default function Dashboard() {
     <div>
       <PageHeader title="Dashboard" description="Panorama general de la escuela (solo alumnos activos, salvo donde se indique)" />
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card className="p-5">
           <p className="text-sm font-medium text-gray-700 mb-3">Distribución por edad</p>
           <ResponsiveContainer width="100%" height={220}>
@@ -174,7 +174,7 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </Card>
 
-        <Card className="p-5 col-span-2">
+        <Card className="p-5 sm:col-span-2">
           <p className="text-sm font-medium text-gray-700 mb-3">Alumnos inscritos por mes (últimos 12 meses)</p>
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={datosInscripciones} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
@@ -187,7 +187,7 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </Card>
 
-        <Card className="p-5 col-span-2">
+        <Card className="p-5 sm:col-span-2">
           <p className="text-sm font-medium text-gray-700 mb-3">
             Estado de pagos {periodoReciente ? `— periodo ${periodoReciente.mesAnio}` : ''}
           </p>
@@ -224,7 +224,7 @@ export default function Dashboard() {
           )}
         </Card>
 
-        <Card className="p-5 col-span-2">
+        <Card className="p-5 sm:col-span-2">
           <p className="text-sm font-medium text-gray-700 mb-3">Módulos más usados</p>
           {usoModulos.length === 0 ? (
             <p className="text-sm text-gray-400 py-10 text-center">Aún no hay suficiente actividad registrada.</p>

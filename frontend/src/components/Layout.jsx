@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, UserSquare2, Award, Repeat, Wallet, MessageSquare, Package, ShieldCheck, LogOut, ShoppingCart, ClipboardList, Settings, KeyRound, LayoutDashboard } from 'lucide-react';
+import { Users, UserSquare2, Award, Repeat, Wallet, MessageSquare, Package, ShieldCheck, LogOut, ShoppingCart, ClipboardList, Settings, KeyRound, LayoutDashboard, Menu, X } from 'lucide-react';
 import api from '../lib/api';
 import { Modal, Field, Input, Button } from './ui';
 
@@ -32,6 +32,7 @@ export default function Layout({ children }) {
   const [errorPassword, setErrorPassword] = useState('');
   const [okPassword, setOkPassword] = useState(false);
   const [guardandoPassword, setGuardandoPassword] = useState(false);
+  const [menuAbierto, setMenuAbierto] = useState(false);
 
   async function cambiarPassword(e) {
     e.preventDefault();
@@ -81,24 +82,37 @@ export default function Layout({ children }) {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <aside className="w-60 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
-        <div className="px-5 py-5 border-b border-gray-100 flex items-center gap-2.5">
+      {/* Fondo oscuro al abrir el menú en móvil, clic para cerrar */}
+      {menuAbierto && (
+        <div className="fixed inset-0 bg-black/40 z-40 md:hidden" onClick={() => setMenuAbierto(false)} />
+      )}
+
+      <aside
+        className={`w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 fixed md:sticky top-0 h-screen z-50 transition-transform duration-200 ${
+          menuAbierto ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
+      >
+        <div className="px-5 py-5 border-b border-gray-100 flex items-center gap-2.5 flex-shrink-0">
           {escuela.logoUrl ? (
             <img src={escuela.logoUrl} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
           ) : (
             <div className="w-8 h-8 rounded-lg bg-gray-900 flex-shrink-0" />
           )}
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="font-semibold text-gray-900 text-sm truncate">{escuela.nombre}</p>
             <p className="text-xs text-gray-400">Panel de administración</p>
           </div>
+          <button onClick={() => setMenuAbierto(false)} className="md:hidden text-gray-400 flex-shrink-0">
+            <X size={20} />
+          </button>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-0.5">
           {menuItems.filter((item) => item.roles.includes(usuario.rol)).map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
+              onClick={() => setMenuAbierto(false)}
               className={({ isActive }) =>
                 `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'
@@ -116,7 +130,7 @@ export default function Layout({ children }) {
           ))}
         </nav>
 
-        <div className="px-3 py-4 border-t border-gray-100">
+        <div className="px-3 py-4 border-t border-gray-100 flex-shrink-0">
           <div className="flex items-center gap-2.5 px-2 mb-3">
             <div className="w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center text-xs font-medium flex-shrink-0">
               {iniciales}
@@ -143,16 +157,24 @@ export default function Layout({ children }) {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col min-w-0">
+        {/* Barra superior solo visible en móvil, con el botón para abrir el menú */}
+        <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-gray-200 bg-white sticky top-0 z-30">
+          <button onClick={() => setMenuAbierto(true)} className="text-gray-600">
+            <Menu size={22} />
+          </button>
+          <p className="font-semibold text-gray-900 text-sm truncate">{escuela.nombre}</p>
+        </div>
+
         {usuario.rol === 'TUTOR' && noLeidos > 0 && (
           <button
             onClick={() => navigate('/comunicacion')}
-            className="w-full bg-amber-50 border-b border-amber-200 px-8 py-2.5 text-sm text-amber-800 text-left hover:bg-amber-100 transition-colors"
+            className="w-full bg-amber-50 border-b border-amber-200 px-4 md:px-8 py-2.5 text-sm text-amber-800 text-left hover:bg-amber-100 transition-colors"
           >
             Tienes <strong>{noLeidos}</strong> comunicado{noLeidos > 1 ? 's' : ''} sin leer que requieren tu atención — clic para revisarlos
           </button>
         )}
-        <div className="p-8 max-w-6xl">{children}</div>
+        <div className="p-4 md:p-8 max-w-6xl w-full">{children}</div>
       </main>
 
       <Modal open={mostrarCambioPassword} onClose={() => setMostrarCambioPassword(false)} title="Cambiar contraseña">
