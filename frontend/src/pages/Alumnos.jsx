@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Users, Plus, Pencil, Search, MessageSquarePlus, Trash2 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import api from '../lib/api';
 import { Card, Table, Badge, EmptyState, PageHeader, Button, Input, Select, MultiSelectSearch, Field, Modal, DIAS_LABEL, formatHora12, CintaVisual, CintaDonut } from '../components/ui';
 
@@ -96,6 +96,9 @@ export default function Alumnos() {
   const [formHistorial, setFormHistorial] = useState({ cintaId: '', fechaObtencion: '', instructor: '' });
   const [editandoHistorialId, setEditandoHistorialId] = useState(null);
   const [editHistorial, setEditHistorial] = useState({ cintaId: '', fechaObtencion: '' });
+  const [valoresRadar, setValoresRadar] = useState([]);
+  const [mostrarHistorialEvaluaciones, setMostrarHistorialEvaluaciones] = useState(false);
+  const [historialEvaluaciones, setHistorialEvaluaciones] = useState([]);
 
   async function enviarComunicacion() {
     if ((!esTutor && formComunicacion.tutorIds.length === 0) || !formComunicacion.asunto || !formComunicacion.mensaje) {
@@ -144,13 +147,35 @@ export default function Alumnos() {
     setMostrarFormHistorial(false);
     setFormHistorial({ cintaId: '', fechaObtencion: '', instructor: '' });
     setEditandoHistorialId(null);
+    setMostrarHistorialEvaluaciones(false);
+    setHistorialEvaluaciones([]);
     try {
       const { data } = await api.get(`/alumnos/${alumnoId}`);
       setDetalleAlumno(data);
+      const { data: valores } = await api.get(`/evaluaciones/actuales/${alumnoId}`);
+      setValoresRadar(valores);
     } catch {
       setError('No se pudo cargar el detalle del alumno');
     } finally {
       setCargandoDetalle(false);
+    }
+  }
+
+  async function actualizarValorAtributo(atributoId, valor) {
+    setValoresRadar((prev) => prev.map((v) => (v.atributoId === atributoId ? { ...v, valor: Number(valor) } : v)));
+  }
+
+  async function guardarValorAtributo(atributoId) {
+    const item = valoresRadar.find((v) => v.atributoId === atributoId);
+    if (!item) return;
+    await api.post('/evaluaciones', { alumnoId: detalleAlumno.id, atributoId, valor: item.valor });
+  }
+
+  async function verHistorialEvaluaciones() {
+    setMostrarHistorialEvaluaciones(!mostrarHistorialEvaluaciones);
+    if (!mostrarHistorialEvaluaciones && historialEvaluaciones.length === 0) {
+      const { data } = await api.get(`/evaluaciones/historial/${detalleAlumno.id}`);
+      setHistorialEvaluaciones(data);
     }
   }
 
@@ -642,6 +667,59 @@ export default function Alumnos() {
                 ))}
               </div>
             </div>
+
+            {!esTutor && valoresRadar.length > 0 && (
+              <div className="pt-2 border-t border-gray-100">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-gray-700">Evaluación de habilidades</p>
+                  <button onClick={verHistorialEvaluaciones} className="text-xs text-gray-500 hover:text-gray-900">
+                    {mostrarHistorialEvaluaciones ? 'Ocultar historial' : 'Ver historial'}
+                  </button>
+                </div>
+
+                <ResponsiveContainer width="100%" height={220}>
+                  <RadarChart data={valoresRadar} outerRadius="70%">
+                    <PolarGrid stroke="#e5e7eb" />
+                    <PolarAngleAxis dataKey="nombre" tick={{ fontSize: 11, fill: '#374151' }} />
+                    <PolarRadiusAxis domain={[0, 10]} tick={{ fontSize: 9, fill: '#9ca3af' }} tickCount={6} />
+                    <Radar dataKey="valor" stroke="#185fa5" fill="#185fa5" fillOpacity={0.3} />
+                    <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }} />
+                  </RadarChart>
+                </ResponsiveContainer>
+
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  {valoresRadar.map((v) => (
+                    <div key={v.atributoId} className="flex items-center gap-2">
+                      <span className="text-xs text-gray-600 flex-1 truncate">{v.nombre}</span>
+                      <input
+                        type="range" min="1" max="10" value={v.valor || 1}
+                        onChange={(e) => actualizarValorAtributo(v.atributoId, e.target.value)}
+                        onMouseUp={() => guardarValorAtributo(v.atributoId)}
+                        onTouchEnd={() => guardarValorAtributo(v.atributoId)}
+                        className="flex-1 accent-gray-900"
+                      />
+                      <span className="text-xs font-medium text-gray-900 w-4 text-right">{v.valor}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {mostrarHistorialEvaluaciones && (
+                  <div className="mt-3 pt-3 border-t border-gray-100 space-y-1.5 max-h-40 overflow-y-auto">
+                    {historialEvaluaciones.length === 0 ? (
+                      <p className="text-xs text-gray-400">Sin historial todavía.</p>
+                    ) : (
+                      historialEvaluaciones.map((h) => (
+                        <div key={h.id} className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600">{h.atributo.nombre}</span>
+                          <span className="font-medium text-gray-900">{h.valor}/10</span>
+                          <span className="text-gray-400">{new Date(h.fecha).toLocaleDateString()}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="pt-2 border-t border-gray-100">
               {!mostrarComunicacion ? (

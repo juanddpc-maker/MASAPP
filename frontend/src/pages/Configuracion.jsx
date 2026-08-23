@@ -24,11 +24,17 @@ export default function Configuracion() {
   const [editandoCategoriaId, setEditandoCategoriaId] = useState(null);
   const [nombreEditadoCategoria, setNombreEditadoCategoria] = useState('');
 
+  const [atributos, setAtributos] = useState([]);
+  const [nuevoAtributo, setNuevoAtributo] = useState('');
+  const [editandoAtributoId, setEditandoAtributoId] = useState(null);
+  const [nombreEditadoAtributo, setNombreEditadoAtributo] = useState('');
+
   function cargar() {
     api.get('/escuela').then((res) => setEscuela({ nombre: res.data.nombre, logoUrl: res.data.logoUrl || '' }));
     api.get('/disciplinas').then((res) => setDisciplinas(res.data));
     api.get('/horarios').then((res) => setHorarios(res.data));
     api.get('/categorias').then((res) => setCategorias(res.data));
+    api.get('/atributos').then((res) => setAtributos(res.data));
   }
   useEffect(cargar, []);
 
@@ -111,6 +117,41 @@ export default function Configuracion() {
       cargar();
     } catch {
       alert('No se puede eliminar: tiene productos asociados');
+    }
+  }
+
+  // --- Atributos de evaluación (radar) ---
+  async function agregarAtributo(e) {
+    e.preventDefault();
+    if (!nuevoAtributo.trim()) return;
+    try {
+      await api.post('/atributos', { nombre: nuevoAtributo, orden: atributos.length });
+      setNuevoAtributo('');
+      cargar();
+    } catch (err) {
+      alert(err.response?.data?.message || 'No se pudo agregar el atributo');
+    }
+  }
+
+  function abrirEditarAtributo(a) {
+    setEditandoAtributoId(a.id);
+    setNombreEditadoAtributo(a.nombre);
+  }
+
+  async function guardarAtributoEditado(id) {
+    if (!nombreEditadoAtributo.trim()) return;
+    await api.put(`/atributos/${id}`, { nombre: nombreEditadoAtributo });
+    setEditandoAtributoId(null);
+    cargar();
+  }
+
+  async function eliminarAtributo(id) {
+    if (!confirm('¿Eliminar este atributo?')) return;
+    try {
+      await api.delete(`/atributos/${id}`);
+      cargar();
+    } catch {
+      alert('No se puede eliminar: ya tiene evaluaciones registradas de algún alumno');
     }
   }
 
@@ -287,6 +328,39 @@ export default function Configuracion() {
             </div>
           ))}
           {categorias.length === 0 && <p className="text-sm text-gray-400">Aún no hay categorías.</p>}
+        </div>
+      </Card>
+
+      <Card className="p-6 max-w-lg">
+        <h2 className="font-medium text-gray-900 mb-1">Atributos de evaluación</h2>
+        <p className="text-xs text-gray-400 mb-4">Se usan para la gráfica de radar en el perfil de cada alumno (ej. Destreza, Velocidad, Fuerza).</p>
+        <form onSubmit={agregarAtributo} className="flex gap-2 mb-4">
+          <Input placeholder="Nombre (ej. Velocidad)" value={nuevoAtributo} onChange={(e) => setNuevoAtributo(e.target.value)} />
+          <Button type="submit">Agregar</Button>
+        </form>
+        <div className="space-y-1">
+          {atributos.map((a) => (
+            <div key={a.id} className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg text-sm">
+              {editandoAtributoId === a.id ? (
+                <>
+                  <Input value={nombreEditadoAtributo} onChange={(e) => setNombreEditadoAtributo(e.target.value)} className="mr-2" />
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button onClick={() => guardarAtributoEditado(a.id)} className="text-green-600 text-xs font-medium">Guardar</button>
+                    <button onClick={() => setEditandoAtributoId(null)} className="text-gray-400"><X size={14} /></button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <span className="text-gray-900">{a.nombre}</span>
+                  <div className="flex gap-2">
+                    <button onClick={() => abrirEditarAtributo(a)} className="text-gray-400 hover:text-gray-900"><Pencil size={14} /></button>
+                    <button onClick={() => eliminarAtributo(a.id)} className="text-gray-400 hover:text-red-600"><Trash2 size={14} /></button>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+          {atributos.length === 0 && <p className="text-sm text-gray-400">Aún no hay atributos. Agrega al menos 3 para que la gráfica de radar se vea bien.</p>}
         </div>
       </Card>
     </div>

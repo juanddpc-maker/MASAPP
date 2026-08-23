@@ -189,6 +189,7 @@ model Alumno {
   conversaciones          Conversacion[]
   registrosComportamiento RegistroComportamiento[]
   ventas                  Venta[]
+  atributoValores         AlumnoAtributoValor[]
 
   @@map("alumnos")
 }
@@ -368,6 +369,33 @@ model Mensaje {
   fechaLectura   DateTime?
 
   @@map("mensajes")
+}
+
+// Catálogo de atributos de evaluación (Destreza, Velocidad, Fuerza...), configurable por el admin
+model Atributo {
+  id     String @id @default(uuid())
+  nombre String @unique
+  orden  Int    @default(0)
+
+  valores AlumnoAtributoValor[]
+
+  @@map("atributos")
+}
+
+// Historial de valores: cada actualización crea un registro NUEVO (no se sobreescribe),
+// para poder ver la evolución del alumno en el tiempo.
+model AlumnoAtributoValor {
+  id              String   @id @default(uuid())
+  alumnoId        String
+  alumno          Alumno   @relation(fields: [alumnoId], references: [id])
+  atributoId      String
+  atributo        Atributo @relation(fields: [atributoId], references: [id])
+  valor           Int      // 1 a 10
+  fecha           DateTime @default(now())
+  registradoPorId String?
+  nota            String?
+
+  @@map("alumno_atributo_valores")
 }
 
 model RegistroComportamiento {

@@ -19,6 +19,8 @@ import { EmailModule } from './email/email.module';
 import { HistorialModule } from './historial-cintas/historial.module';
 import { CategoriasModule } from './categorias/categorias.module';
 import { LogsModule } from './logs/logs.module';
+import { AtributosModule } from './atributos/atributos.module';
+import { EvaluacionesModule } from './evaluaciones/evaluaciones.module';
 
 @Module({
   imports: [
@@ -42,6 +44,8 @@ import { LogsModule } from './logs/logs.module';
     HistorialModule,
     CategoriasModule,
     LogsModule,
+    AtributosModule,
+    EvaluacionesModule,
   ],
 })
 export class AppModule {}
