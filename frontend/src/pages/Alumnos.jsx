@@ -3,13 +3,14 @@ import { Users, Plus, Pencil, Search, MessageSquarePlus, Trash2 } from 'lucide-r
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import api from '../lib/api';
 import LogrosAlumno from '../components/LogrosAlumno';
+import FotosAlumno from '../components/FotosAlumno';
 import { Card, Table, Badge, EmptyState, PageHeader, Button, Input, Select, MultiSelectSearch, Field, Modal, DIAS_LABEL, formatHora12, CintaVisual, CintaDonut } from '../components/ui';
 
 const estadoTono = { ACTIVO: 'green', INACTIVO: 'gray', SUSPENDIDO: 'red' };
 const generoLabel = { MASCULINO: 'Masculino', FEMENINO: 'Femenino' };
 const vacio = {
   nombreCompleto: '', fechaNacimiento: '', fechaInscripcion: new Date().toISOString().slice(0, 10), genero: '', tallaCinta: '', tallaUniforme: '',
-  condicionesMedicas: '', horarioIds: [], horarioPrincipalId: '', cintaActualId: '', estado: 'ACTIVO', tutorIds: [],
+  condicionesMedicas: '', curp: '', pais: 'México', horarioIds: [], horarioPrincipalId: '', cintaActualId: '', estado: 'ACTIVO', tutorIds: [],
 };
 
 function labelHorario(h) {
@@ -243,6 +244,8 @@ export default function Alumnos() {
       tallaCinta: alumno.tallaCinta || '',
       tallaUniforme: alumno.tallaUniforme || '',
       condicionesMedicas: alumno.condicionesMedicas || '',
+      curp: alumno.curp || '',
+      pais: alumno.pais || '',
       horarioIds: alumno.horarios.map((h) => h.horarioId),
       horarioPrincipalId: alumno.horarios.find((h) => h.esPrincipal)?.horarioId || '',
       cintaActualId: alumno.cintaActualId || '',
@@ -405,6 +408,18 @@ export default function Alumnos() {
               </Field>
             )}
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="CURP (opcional)">
+                <Input value={form.curp} maxLength={18} placeholder="18 caracteres" onChange={(e) => setForm({ ...form, curp: e.target.value.toUpperCase() })} />
+              </Field>
+              <Field label="País">
+                <Input list="lista-paises" value={form.pais} onChange={(e) => setForm({ ...form, pais: e.target.value })} />
+                <datalist id="lista-paises">
+                  {['México', 'Estados Unidos', 'Canadá', 'Guatemala', 'Colombia', 'Argentina', 'España'].map((p) => <option key={p} value={p} />)}
+                </datalist>
+              </Field>
+            </div>
+
             <Field label="Condiciones médicas (opcional)">
               <Input value={form.condicionesMedicas} onChange={(e) => setForm({ ...form, condicionesMedicas: e.target.value })} />
             </Field>
@@ -566,6 +581,13 @@ export default function Alumnos() {
                 <p className="text-sm text-gray-500">
                   {calcularEdad(detalleAlumno.fechaNacimiento)} años · {generoLabel[detalleAlumno.genero] || '-'}
                 </p>
+                {(detalleAlumno.curp || detalleAlumno.pais) && (
+                  <p className="text-xs text-gray-500">
+                    {detalleAlumno.curp && <>CURP: {detalleAlumno.curp}</>}
+                    {detalleAlumno.curp && detalleAlumno.pais && ' · '}
+                    {detalleAlumno.pais}
+                  </p>
+                )}
                 <p className="text-xs text-gray-400">
                   Inscrito desde {new Date(detalleAlumno.fechaInscripcion).toLocaleDateString()} ({calcularTiempoInscrito(detalleAlumno.fechaInscripcion)})
                 </p>
@@ -660,6 +682,8 @@ export default function Alumnos() {
               puedeEditar={!esTutor}
               onCambio={() => verDetalle(detalleAlumno.id)}
             />
+
+            <FotosAlumno alumnoId={detalleAlumno.id} puedeEditar={!esTutor} />
 
             <div>
               <p className="text-sm font-medium text-gray-700 mb-1">Horarios</p>

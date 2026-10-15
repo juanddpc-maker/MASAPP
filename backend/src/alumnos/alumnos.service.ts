@@ -56,6 +56,8 @@ export class AlumnosService {
     return this.prisma.alumno.create({
       data: {
         ...resto,
+        curp: resto.curp?.trim().toUpperCase() || null,
+        pais: resto.pais?.trim() || null,
         genero: resto.genero as any,
         fechaNacimiento: new Date(data.fechaNacimiento),
         fechaInscripcion: data.fechaInscripcion ? new Date(data.fechaInscripcion) : new Date(),
@@ -83,6 +85,8 @@ export class AlumnosService {
     if (data.fechaInscripcion) payload.fechaInscripcion = new Date(data.fechaInscripcion);
     // Un select vacío no debe mandar un id vacío a Prisma
     if (payload.cintaActualId === '') delete payload.cintaActualId;
+    if ('curp' in payload) payload.curp = payload.curp?.trim().toUpperCase() || null;
+    if ('pais' in payload) payload.pais = payload.pais?.trim() || null;
     return this.prisma.alumno.update({ where: { id }, data: payload, include: includeCompleto });
   }
 

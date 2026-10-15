@@ -23,6 +23,7 @@ import { AtributosModule } from './atributos/atributos.module';
 import { EvaluacionesModule } from './evaluaciones/evaluaciones.module';
 import { AsistenciaModule } from './asistencia/asistencia.module';
 import { LogrosModule } from './logros/logros.module';
+import { FotosModule } from './fotos/fotos.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { LogrosModule } from './logros/logros.module';
     EvaluacionesModule,
     AsistenciaModule,
     LogrosModule,
+    FotosModule,
   ],
 })
 export class AppModule {}

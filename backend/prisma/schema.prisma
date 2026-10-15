@@ -212,6 +212,18 @@ model LogroAlumno {
   @@map("logros_alumno")
 }
 
+model FotoAlumno {
+  id        String   @id @default(uuid())
+  alumnoId  String
+  alumno    Alumno   @relation(fields: [alumnoId], references: [id])
+  ruta      String // ruta del archivo dentro del bucket de Supabase Storage
+  fecha     DateTime // fecha en que se tomó la foto (para ver el crecimiento)
+  nota      String?
+  createdAt DateTime @default(now())
+
+  @@map("fotos_alumno")
+}
+
 model Alumno {
   id                 String       @id @default(uuid())
   nombreCompleto     String
@@ -221,6 +233,8 @@ model Alumno {
   tallaCinta         String?
   tallaUniforme      String?
   condicionesMedicas String?
+  curp               String?
+  pais               String?
   estado             EstadoAlumno @default(ACTIVO)
   createdAt          DateTime     @default(now())
 
@@ -238,6 +252,7 @@ model Alumno {
   atributoValores         AlumnoAtributoValor[]
   asistencias             AsistenciaAlumno[]
   logros                  LogroAlumno[]
+  fotos                   FotoAlumno[]
 
   @@map("alumnos")
 }
