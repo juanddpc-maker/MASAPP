@@ -21,6 +21,7 @@ import { CategoriasModule } from './categorias/categorias.module';
 import { LogsModule } from './logs/logs.module';
 import { AtributosModule } from './atributos/atributos.module';
 import { EvaluacionesModule } from './evaluaciones/evaluaciones.module';
+import { AsistenciaModule } from './asistencia/asistencia.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { EvaluacionesModule } from './evaluaciones/evaluaciones.module';
     LogsModule,
     AtributosModule,
     EvaluacionesModule,
+    AsistenciaModule,
   ],
 })
 export class AppModule {}
