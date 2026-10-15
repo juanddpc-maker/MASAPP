@@ -3,9 +3,13 @@ import { ClipboardCheck, Clock, Check, X, History } from 'lucide-react';
 import api from '../lib/api';
 import { Card, Table, Badge, EmptyState, PageHeader, Select, Input, Field } from '../components/ui';
 
+// Fecha de HOY en la zona horaria del navegador (toISOString usaría UTC y, por la tarde-noche
+// en México, ya marcaría el día siguiente).
 function hoyISO() {
   const d = new Date();
-  return d.toISOString().slice(0, 10);
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const dia = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mes}-${dia}`;
 }
 
 export default function Asistencia() {
@@ -113,7 +117,7 @@ export default function Asistencia() {
                       onClick={() => setFecha(new Date(s.fecha).toISOString().slice(0, 10))}
                       className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 text-sm text-left"
                     >
-                      <span className="text-gray-900">{new Date(s.fecha).toLocaleDateString()}</span>
+                      <span className="text-gray-900">{new Date(s.fecha).toLocaleDateString(undefined, { timeZone: 'UTC' })}</span>
                       <span className="text-gray-400">
                         {s.registros.filter((r) => r.estado === 'PRESENTE').length} presentes ·{' '}
                         {s.registros.filter((r) => r.estado === 'RETARDO').length} retardos

@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGri
 import api from '../lib/api';
 import LogrosAlumno from '../components/LogrosAlumno';
 import FotosAlumno from '../components/FotosAlumno';
+import ProgresoEvaluacion from '../components/ProgresoEvaluacion';
 import { Card, Table, Badge, EmptyState, PageHeader, Button, Input, Select, MultiSelectSearch, Field, Modal, DIAS_LABEL, formatHora12, CintaVisual, CintaDonut } from '../components/ui';
 
 const estadoTono = { ACTIVO: 'green', INACTIVO: 'gray', SUSPENDIDO: 'red' };
@@ -154,8 +155,6 @@ export default function Alumnos() {
     try {
       const { data } = await api.get(`/alumnos/${alumnoId}`);
       setDetalleAlumno(data);
-      const { data: valores } = await api.get(`/evaluaciones/actuales/${alumnoId}`);
-      setValoresRadar(valores);
     } catch {
       setError('No se pudo cargar el detalle del alumno');
     } finally {
@@ -705,58 +704,7 @@ export default function Alumnos() {
               </div>
             </div>
 
-            {!esTutor && valoresRadar.length > 0 && (
-              <div className="pt-2 border-t border-gray-100">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-gray-700">Evaluación de habilidades</p>
-                  <button onClick={verHistorialEvaluaciones} className="text-xs text-gray-500 hover:text-gray-900">
-                    {mostrarHistorialEvaluaciones ? 'Ocultar historial' : 'Ver historial'}
-                  </button>
-                </div>
-
-                <ResponsiveContainer width="100%" height={220}>
-                  <RadarChart data={valoresRadar} outerRadius="70%">
-                    <PolarGrid stroke="#e5e7eb" />
-                    <PolarAngleAxis dataKey="nombre" tick={{ fontSize: 11, fill: '#374151' }} />
-                    <PolarRadiusAxis domain={[0, 10]} tick={{ fontSize: 9, fill: '#9ca3af' }} tickCount={6} />
-                    <Radar dataKey="valor" stroke="#185fa5" fill="#185fa5" fillOpacity={0.3} />
-                    <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }} />
-                  </RadarChart>
-                </ResponsiveContainer>
-
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  {valoresRadar.map((v) => (
-                    <div key={v.atributoId} className="flex items-center gap-2">
-                      <span className="text-xs text-gray-600 flex-1 truncate">{v.nombre}</span>
-                      <input
-                        type="range" min="1" max="10" value={v.valor || 1}
-                        onChange={(e) => actualizarValorAtributo(v.atributoId, e.target.value)}
-                        onMouseUp={() => guardarValorAtributo(v.atributoId)}
-                        onTouchEnd={() => guardarValorAtributo(v.atributoId)}
-                        className="flex-1 accent-gray-900"
-                      />
-                      <span className="text-xs font-medium text-gray-900 w-4 text-right">{v.valor}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {mostrarHistorialEvaluaciones && (
-                  <div className="mt-3 pt-3 border-t border-gray-100 space-y-1.5 max-h-40 overflow-y-auto">
-                    {historialEvaluaciones.length === 0 ? (
-                      <p className="text-xs text-gray-400">Sin historial todavía.</p>
-                    ) : (
-                      historialEvaluaciones.map((h) => (
-                        <div key={h.id} className="flex items-center justify-between text-xs">
-                          <span className="text-gray-600">{h.atributo.nombre}</span>
-                          <span className="font-medium text-gray-900">{h.valor}/10</span>
-                          <span className="text-gray-400">{new Date(h.fecha).toLocaleDateString()}</span>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+            {!esTutor && <ProgresoEvaluacion key={detalleAlumno.id} alumnoId={detalleAlumno.id} />}
 
             <div className="pt-2 border-t border-gray-100">
               {!mostrarComunicacion ? (

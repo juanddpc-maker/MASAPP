@@ -5,8 +5,11 @@ import { MarcarAsistenciaDto } from './dto/asistencia.dto';
 function inicioDelDia(fechaTexto: string): Date {
   // Normaliza a medianoche para que "la misma fecha" siempre encuentre la misma sesión,
   // sin importar a qué hora del día se abra o se retome.
+  // Se fija en UTC para que el día sea el mismo en cualquier computadora o servidor
+  // (antes dependía de la zona horaria de donde corriera el backend).
+  if (/^\d{4}-\d{2}-\d{2}$/.test(fechaTexto)) return new Date(`${fechaTexto}T00:00:00.000Z`);
   const f = new Date(fechaTexto);
-  f.setHours(0, 0, 0, 0);
+  f.setUTCHours(0, 0, 0, 0);
   return f;
 }
 

@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { AtributosService } from './atributos.service';
-import { CreateAtributoDto, UpdateAtributoDto } from './dto/atributo.dto';
+import { CreateAtributoDto, UpdateAtributoDto, AsignarAlumnosDto } from './dto/atributo.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -19,6 +19,12 @@ export class AtributosController {
   @Roles('ADMINISTRADOR')
   create(@Body() dto: CreateAtributoDto) {
     return this.service.create(dto);
+  }
+
+  @Put(':id/alumnos')
+  @Roles('ADMINISTRADOR')
+  asignarAlumnos(@Param('id') id: string, @Body() dto: AsignarAlumnosDto) {
+    return this.service.asignarAlumnos(id, dto.alumnoIds);
   }
 
   @Put(':id')

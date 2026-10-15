@@ -17,6 +17,7 @@ import Comportamiento from './pages/Comportamiento';
 import Configuracion from './pages/Configuracion';
 import Layout from './components/Layout';
 import Asistencia from './pages/Asistencia';
+import Evaluaciones from './pages/Evaluaciones';
 import './styles.css';
 
 function RutaProtegida({ children }) {
@@ -34,6 +35,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/accesos" element={<RutaProtegida><Accesos /></RutaProtegida>} />
         <Route path="/alumnos" element={<RutaProtegida><Alumnos /></RutaProtegida>} />
 		<Route path="/asistencia" element={<RutaProtegida><Asistencia /></RutaProtegida>} />
+        <Route path="/evaluaciones" element={<RutaProtegida><Evaluaciones /></RutaProtegida>} />
         <Route path="/tutores" element={<RutaProtegida><Tutores /></RutaProtegida>} />
         <Route path="/cintas" element={<RutaProtegida><Cintas /></RutaProtegida>} />
         <Route path="/eventos-cinta" element={<RutaProtegida><EventosCinta /></RutaProtegida>} />

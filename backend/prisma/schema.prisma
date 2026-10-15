@@ -253,6 +253,8 @@ model Alumno {
   asistencias             AsistenciaAlumno[]
   logros                  LogroAlumno[]
   fotos                   FotoAlumno[]
+  atributosPersonales     AtributoAlumno[]
+  evaluacionesMensuales   EvaluacionMensual[]
 
   @@map("alumnos")
 }
@@ -437,18 +439,84 @@ model Mensaje {
 }
 
 // Catálogo de atributos de evaluación (Destreza, Velocidad, Fuerza...), configurable por el admin
-model Atributo {
-  id     String @id @default(uuid())
-  nombre String @unique
-  orden  Int    @default(0)
+enum AlcanceAtributo {
+  GENERAL
+  PERSONAL
+}
 
-  valores AlumnoAtributoValor[]
+enum EstadoPeriodoEval {
+  ABIERTO
+  CERRADO
+}
+
+model Atributo {
+  id      String          @id @default(uuid())
+  nombre  String          @unique
+  orden   Int             @default(0)
+  alcance AlcanceAtributo @default(GENERAL) // PERSONAL = solo aplica a los alumnos asignados
+
+  valores           AlumnoAtributoValor[]
+  alumnosAsignados  AtributoAlumno[]
+  valoresMensuales  EvaluacionValor[]
 
   @@map("atributos")
 }
 
 // Historial de valores: cada actualización crea un registro NUEVO (no se sobreescribe),
 // para poder ver la evolución del alumno en el tiempo.
+model AtributoAlumno {
+  id         String   @id @default(uuid())
+  atributoId String
+  atributo   Atributo @relation(fields: [atributoId], references: [id])
+  alumnoId   String
+  alumno     Alumno   @relation(fields: [alumnoId], references: [id])
+
+  @@unique([atributoId, alumnoId])
+  @@map("atributos_alumno")
+}
+
+model PeriodoEvaluacion {
+  id          String            @id @default(uuid())
+  nombre      String
+  fechaInicio DateTime
+  fechaFin    DateTime
+  estado      EstadoPeriodoEval @default(ABIERTO)
+  createdAt   DateTime          @default(now())
+
+  evaluaciones EvaluacionMensual[]
+
+  @@map("periodos_evaluacion")
+}
+
+model EvaluacionMensual {
+  id           String            @id @default(uuid())
+  periodoId    String
+  periodo      PeriodoEvaluacion @relation(fields: [periodoId], references: [id])
+  alumnoId     String
+  alumno       Alumno            @relation(fields: [alumnoId], references: [id])
+  instructorId String?
+  notas        String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  valores EvaluacionValor[]
+
+  @@unique([periodoId, alumnoId])
+  @@map("evaluaciones_mensuales")
+}
+
+model EvaluacionValor {
+  id           String            @id @default(uuid())
+  evaluacionId String
+  evaluacion   EvaluacionMensual @relation(fields: [evaluacionId], references: [id], onDelete: Cascade)
+  atributoId   String
+  atributo     Atributo          @relation(fields: [atributoId], references: [id])
+  valor        Int // 1 a 10
+
+  @@unique([evaluacionId, atributoId])
+  @@map("evaluacion_valores")
+}
+
 model AlumnoAtributoValor {
   id              String   @id @default(uuid())
   alumnoId        String

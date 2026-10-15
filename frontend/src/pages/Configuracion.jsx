@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Trash2, Pencil, X } from 'lucide-react';
 import api from '../lib/api';
-import { Card, PageHeader, Button, Input, Select, Table, Field, DiasSemanaSelect, TimeSelect, formatHora12, DIAS_LABEL } from '../components/ui';
+import { Card, PageHeader, Button, Input, Select, Table, Field, DiasSemanaSelect, TimeSelect, formatHora12, DIAS_LABEL, Modal, Badge, MultiSelectSearch } from '../components/ui';
 
 const horarioVacio = { disciplinaId: '', nombre: '', dias: [], horaInicio: '17:00', horaFin: '18:00', costoExtra: '' };
 
@@ -26,6 +26,10 @@ export default function Configuracion() {
 
   const [atributos, setAtributos] = useState([]);
   const [nuevoAtributo, setNuevoAtributo] = useState('');
+  const [alcanceNuevo, setAlcanceNuevo] = useState('GENERAL');
+  const [asignando, setAsignando] = useState(null); // atributo personal al que se le asignan alumnos
+  const [alumnosLista, setAlumnosLista] = useState([]);
+  const [alumnosSel, setAlumnosSel] = useState([]);
   const [editandoAtributoId, setEditandoAtributoId] = useState(null);
   const [nombreEditadoAtributo, setNombreEditadoAtributo] = useState('');
 
@@ -125,12 +129,28 @@ export default function Configuracion() {
     e.preventDefault();
     if (!nuevoAtributo.trim()) return;
     try {
-      await api.post('/atributos', { nombre: nuevoAtributo, orden: atributos.length });
+      await api.post('/atributos', { nombre: nuevoAtributo, orden: atributos.length, alcance: alcanceNuevo });
       setNuevoAtributo('');
+      setAlcanceNuevo('GENERAL');
       cargar();
     } catch (err) {
       alert(err.response?.data?.message || 'No se pudo agregar el atributo');
     }
+  }
+
+  async function abrirAsignar(a) {
+    setAsignando(a);
+    setAlumnosSel(a.alumnoIds || []);
+    if (alumnosLista.length === 0) {
+      const { data } = await api.get('/alumnos');
+      setAlumnosLista(data.filter((x) => x.estado === 'ACTIVO'));
+    }
+  }
+
+  async function guardarAsignacion() {
+    await api.put(`/atributos/${asignando.id}/alumnos`, { alumnoIds: alumnosSel });
+    setAsignando(null);
+    cargar();
   }
 
   function abrirEditarAtributo(a) {
@@ -333,9 +353,13 @@ export default function Configuracion() {
 
       <Card className="p-6 max-w-lg">
         <h2 className="font-medium text-gray-900 mb-1">Atributos de evaluación</h2>
-        <p className="text-xs text-gray-400 mb-4">Se usan para la gráfica de radar en el perfil de cada alumno (ej. Destreza, Velocidad, Fuerza).</p>
-        <form onSubmit={agregarAtributo} className="flex gap-2 mb-4">
-          <Input placeholder="Nombre (ej. Velocidad)" value={nuevoAtributo} onChange={(e) => setNuevoAtributo(e.target.value)} />
+        <p className="text-xs text-gray-400 mb-4">Se califican cada mes en Evaluaciones. Los <b>generales</b> aplican a todos los alumnos; los <b>personales</b> solo a los alumnos que les asignes.</p>
+        <form onSubmit={agregarAtributo} className="flex flex-wrap gap-2 mb-4">
+          <Input placeholder="Nombre (ej. Velocidad)" value={nuevoAtributo} onChange={(e) => setNuevoAtributo(e.target.value)} className="flex-1 min-w-[140px]" />
+          <Select value={alcanceNuevo} onChange={(e) => setAlcanceNuevo(e.target.value)} className="!w-auto">
+            <option value="GENERAL">General</option>
+            <option value="PERSONAL">Personal</option>
+          </Select>
           <Button type="submit">Agregar</Button>
         </form>
         <div className="space-y-1">
@@ -351,8 +375,14 @@ export default function Configuracion() {
                 </>
               ) : (
                 <>
-                  <span className="text-gray-900">{a.nombre}</span>
-                  <div className="flex gap-2">
+                  <span className="text-gray-900 flex items-center gap-2">
+                    {a.nombre}
+                    {a.alcance === 'PERSONAL' && <Badge tone="blue">Personal · {(a.alumnoIds || []).length}</Badge>}
+                  </span>
+                  <div className="flex gap-2 items-center">
+                    {a.alcance === 'PERSONAL' && (
+                      <button onClick={() => abrirAsignar(a)} className="text-xs text-gray-500 hover:text-gray-900">Alumnos</button>
+                    )}
                     <button onClick={() => abrirEditarAtributo(a)} className="text-gray-400 hover:text-gray-900"><Pencil size={14} /></button>
                     <button onClick={() => eliminarAtributo(a.id)} className="text-gray-400 hover:text-red-600"><Trash2 size={14} /></button>
                   </div>
@@ -363,6 +393,19 @@ export default function Configuracion() {
           {atributos.length === 0 && <p className="text-sm text-gray-400">Aún no hay atributos. Agrega al menos 3 para que la gráfica de radar se vea bien.</p>}
         </div>
       </Card>
+
+      <Modal open={!!asignando} onClose={() => setAsignando(null)} title={asignando ? `Alumnos con "${asignando.nombre}"` : ''}>
+        <div className="space-y-3">
+          <p className="text-xs text-gray-500">Este atributo solo aparecerá en la evaluación de los alumnos que elijas.</p>
+          <MultiSelectSearch
+            options={alumnosLista.map((x) => ({ id: x.id, label: x.nombreCompleto }))}
+            selected={alumnosSel}
+            onChange={setAlumnosSel}
+            placeholder="Buscar alumno por nombre..."
+          />
+          <Button onClick={guardarAsignacion} className="w-full justify-center">Guardar</Button>
+        </div>
+      </Modal>
     </div>
   );
 }

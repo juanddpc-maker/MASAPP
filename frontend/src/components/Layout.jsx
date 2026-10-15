@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, UserSquare2, Award, Repeat, Wallet, MessageSquare, Package, ShieldCheck, LogOut, ShoppingCart, ClipboardList, Settings, KeyRound, LayoutDashboard, Menu, X, ClipboardCheck } from 'lucide-react';
+import { Users, UserSquare2, Award, Repeat, Wallet, MessageSquare, Package, ShieldCheck, LogOut, ShoppingCart, ClipboardList, Settings, KeyRound, LayoutDashboard, Menu, X, ClipboardCheck, Star } from 'lucide-react';
 import api from '../lib/api';
 import { Modal, Field, Input, Button } from './ui';
 
@@ -8,6 +8,7 @@ const menuItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['ADMINISTRADOR'] },
   { to: '/alumnos', label: 'Alumnos', icon: Users, roles: ['ADMINISTRADOR', 'INSTRUCTOR', 'TUTOR'] },
   { to: '/asistencia', label: 'Asistencia', icon: ClipboardCheck, roles: ['ADMINISTRADOR', 'INSTRUCTOR'] },
+  { to: '/evaluaciones', label: 'Evaluaciones', icon: Star, roles: ['ADMINISTRADOR', 'INSTRUCTOR'] },
   { to: '/tutores', label: 'Tutores', icon: UserSquare2, roles: ['ADMINISTRADOR', 'INSTRUCTOR'] },
   { to: '/cintas', label: 'Cintas', icon: Award, roles: ['ADMINISTRADOR', 'INSTRUCTOR'] },
   { to: '/eventos-cinta', label: 'Cambio de cinta', icon: Repeat, roles: ['ADMINISTRADOR', 'INSTRUCTOR'] },
