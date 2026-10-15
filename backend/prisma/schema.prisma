@@ -91,6 +91,11 @@ enum EstadoVenta {
   CANCELADO
 }
 
+enum EstadoAsistencia {
+  PRESENTE
+  RETARDO
+}
+
 model Usuario {
   id            String     @id @default(uuid())
   nombre        String
@@ -149,6 +154,7 @@ model Horario {
   costoExtra   Decimal?    @db.Decimal(10, 2) // se cobra aparte SOLO si es un horario extra (no el principal) del alumno
 
   alumnos AlumnoHorario[]
+  sesionesAsistencia SesionAsistencia[]
 
   @@map("horarios")
 }
@@ -164,6 +170,34 @@ model AlumnoHorario {
 
   @@unique([alumnoId, horarioId])
   @@map("alumno_horarios")
+}
+
+// Una "sesión" = un horario en un día específico. Si el instructor sale y vuelve
+// a entrar el mismo día, retoma la misma sesión (no se crea una duplicada).
+model SesionAsistencia {
+  id        String   @id @default(uuid())
+  horarioId String
+  horario   Horario  @relation(fields: [horarioId], references: [id])
+  fecha     DateTime
+  createdAt DateTime @default(now())
+
+  registros AsistenciaAlumno[]
+
+  @@unique([horarioId, fecha])
+  @@map("sesiones_asistencia")
+}
+
+model AsistenciaAlumno {
+  id          String           @id @default(uuid())
+  sesionId    String
+  sesion      SesionAsistencia @relation(fields: [sesionId], references: [id])
+  alumnoId    String
+  alumno      Alumno           @relation(fields: [alumnoId], references: [id])
+  estado      EstadoAsistencia
+  horaMarcado DateTime         @default(now())
+
+  @@unique([sesionId, alumnoId])
+  @@map("asistencia_alumnos")
 }
 
 model Alumno {
@@ -190,6 +224,7 @@ model Alumno {
   registrosComportamiento RegistroComportamiento[]
   ventas                  Venta[]
   atributoValores         AlumnoAtributoValor[]
+  asistencias             AsistenciaAlumno[]
 
   @@map("alumnos")
 }
