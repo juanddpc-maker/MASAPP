@@ -26,7 +26,7 @@ export class AlumnosService {
   async findOne(id: string, usuario: any) {
     const alumno = await this.prisma.alumno.findUnique({
       where: { id },
-      include: { ...includeCompleto, historialCintas: { include: { cinta: true }, orderBy: { fechaObtencion: 'desc' } } },
+      include: { ...includeCompleto, historialCintas: { include: { cinta: true }, orderBy: { fechaObtencion: 'desc' } }, logros: { orderBy: { fecha: 'desc' } } },
     });
     if (!alumno) throw new NotFoundException('Alumno no encontrado');
 

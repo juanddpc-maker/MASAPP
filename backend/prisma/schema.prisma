@@ -200,6 +200,18 @@ model AsistenciaAlumno {
   @@map("asistencia_alumnos")
 }
 
+model LogroAlumno {
+  id          String   @id @default(uuid())
+  alumnoId    String
+  alumno      Alumno   @relation(fields: [alumnoId], references: [id])
+  titulo      String
+  fecha       DateTime
+  descripcion String?
+  createdAt   DateTime @default(now())
+
+  @@map("logros_alumno")
+}
+
 model Alumno {
   id                 String       @id @default(uuid())
   nombreCompleto     String
@@ -225,6 +237,7 @@ model Alumno {
   ventas                  Venta[]
   atributoValores         AlumnoAtributoValor[]
   asistencias             AsistenciaAlumno[]
+  logros                  LogroAlumno[]
 
   @@map("alumnos")
 }
@@ -301,6 +314,8 @@ model HistorialCinta {
   cinta           Cinta    @relation(fields: [cintaId], references: [id])
   fechaObtencion  DateTime @default(now())
   instructor      String?
+  diplomaNuevo    String?
+  diplomaAnterior String? // se copia solo del diploma del registro previo; no se edita
   eventoCandidatoId String? @unique
   eventoCandidato   EventoCandidato? @relation(fields: [eventoCandidatoId], references: [id])
 

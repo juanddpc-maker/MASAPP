@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Users, Plus, Pencil, Search, MessageSquarePlus, Trash2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import api from '../lib/api';
+import LogrosAlumno from '../components/LogrosAlumno';
 import { Card, Table, Badge, EmptyState, PageHeader, Button, Input, Select, MultiSelectSearch, Field, Modal, DIAS_LABEL, formatHora12, CintaVisual, CintaDonut } from '../components/ui';
 
 const estadoTono = { ACTIVO: 'green', INACTIVO: 'gray', SUSPENDIDO: 'red' };
@@ -93,9 +94,9 @@ export default function Alumnos() {
   const [enviandoComunicacion, setEnviandoComunicacion] = useState(false);
   const [comunicacionEnviada, setComunicacionEnviada] = useState(false);
   const [mostrarFormHistorial, setMostrarFormHistorial] = useState(false);
-  const [formHistorial, setFormHistorial] = useState({ cintaId: '', fechaObtencion: '', instructor: '' });
+  const [formHistorial, setFormHistorial] = useState({ cintaId: '', fechaObtencion: '', instructor: '', diplomaNuevo: '' });
   const [editandoHistorialId, setEditandoHistorialId] = useState(null);
-  const [editHistorial, setEditHistorial] = useState({ cintaId: '', fechaObtencion: '' });
+  const [editHistorial, setEditHistorial] = useState({ cintaId: '', fechaObtencion: '', diplomaNuevo: '' });
   const [valoresRadar, setValoresRadar] = useState([]);
   const [mostrarHistorialEvaluaciones, setMostrarHistorialEvaluaciones] = useState(false);
   const [historialEvaluaciones, setHistorialEvaluaciones] = useState([]);
@@ -145,7 +146,7 @@ export default function Alumnos() {
     setComunicacionEnviada(false);
     setFormComunicacion({ tutorIds: [], tipo: 'COMPORTAMIENTO', asunto: '', mensaje: '' });
     setMostrarFormHistorial(false);
-    setFormHistorial({ cintaId: '', fechaObtencion: '', instructor: '' });
+    setFormHistorial({ cintaId: '', fechaObtencion: '', instructor: '', diplomaNuevo: '' });
     setEditandoHistorialId(null);
     setMostrarHistorialEvaluaciones(false);
     setHistorialEvaluaciones([]);
@@ -182,14 +183,14 @@ export default function Alumnos() {
   async function agregarHistorial() {
     if (!formHistorial.cintaId) return;
     await api.post('/historial-cintas', { alumnoId: detalleAlumno.id, ...formHistorial });
-    setFormHistorial({ cintaId: '', fechaObtencion: '', instructor: '' });
+    setFormHistorial({ cintaId: '', fechaObtencion: '', instructor: '', diplomaNuevo: '' });
     setMostrarFormHistorial(false);
     verDetalle(detalleAlumno.id);
   }
 
   function abrirEdicionHistorial(h) {
     setEditandoHistorialId(h.id);
-    setEditHistorial({ cintaId: h.cintaId, fechaObtencion: h.fechaObtencion.slice(0, 10) });
+    setEditHistorial({ cintaId: h.cintaId, fechaObtencion: h.fechaObtencion.slice(0, 10), diplomaNuevo: h.diplomaNuevo || '' });
   }
 
   async function guardarEdicionHistorial(id) {
@@ -608,6 +609,7 @@ export default function Alumnos() {
                   </Select>
                   <Input type="date" value={formHistorial.fechaObtencion} onChange={(e) => setFormHistorial({ ...formHistorial, fechaObtencion: e.target.value })} />
                   <Input placeholder="Instructor (opcional)" value={formHistorial.instructor} onChange={(e) => setFormHistorial({ ...formHistorial, instructor: e.target.value })} />
+                  <Input placeholder="Diploma nuevo (folio o nombre, opcional)" value={formHistorial.diplomaNuevo} onChange={(e) => setFormHistorial({ ...formHistorial, diplomaNuevo: e.target.value })} />
                   <Button onClick={agregarHistorial} className="w-full justify-center">Guardar</Button>
                 </div>
               )}
@@ -615,7 +617,7 @@ export default function Alumnos() {
               {detalleAlumno.historialCintas?.length > 0 ? (
                 <div className="space-y-2">
                   {detalleAlumno.historialCintas.map((h, i) => (
-                    <div key={h.id} className="flex items-center gap-3 text-sm">
+                    <div key={h.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                       <div className={`w-2 h-2 rounded-full flex-shrink-0 ${i === 0 ? 'bg-gray-900' : 'bg-gray-300'}`} />
                       {editandoHistorialId === h.id ? (
                         <>
@@ -623,6 +625,8 @@ export default function Alumnos() {
                             {cintas.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                           </Select>
                           <Input type="date" value={editHistorial.fechaObtencion} onChange={(e) => setEditHistorial({ ...editHistorial, fechaObtencion: e.target.value })} className="!py-1 !w-32 text-xs" />
+                          <Input placeholder="Diploma nuevo" value={editHistorial.diplomaNuevo} onChange={(e) => setEditHistorial({ ...editHistorial, diplomaNuevo: e.target.value })} className="!py-1 !w-36 text-xs" />
+                          {h.diplomaAnterior && <span className="text-xs text-gray-400">Anterior: {h.diplomaAnterior}</span>}
                           <button onClick={() => guardarEdicionHistorial(h.id)} className="text-green-600 text-xs">Guardar</button>
                           <button onClick={() => setEditandoHistorialId(null)} className="text-gray-400 text-xs">Cancelar</button>
                         </>
@@ -632,6 +636,8 @@ export default function Alumnos() {
                             <CintaVisual color1={h.cinta.color1} color2={h.cinta.color2} color3={h.cinta.color3} width={32} height={12} /> {h.cinta.nombre}
                           </span>
                           <span className="text-gray-400 text-xs">{new Date(h.fechaObtencion).toLocaleDateString()}</span>
+                          {h.diplomaNuevo && <span className="text-xs text-gray-700">Diploma: {h.diplomaNuevo}</span>}
+                          {h.diplomaAnterior && <span className="text-xs text-gray-400">Anterior: {h.diplomaAnterior}</span>}
                           {esAdmin && (
                             <span className="ml-auto flex gap-2">
                               <button onClick={() => abrirEdicionHistorial(h)} className="text-gray-400 hover:text-gray-900"><Pencil size={12} /></button>
@@ -647,6 +653,13 @@ export default function Alumnos() {
                 <p className="text-sm text-gray-400">Aún no tiene exámenes de cambio de cinta aprobados. Su cinta actual fue asignada manualmente o por defecto.</p>
               )}
             </div>
+
+            <LogrosAlumno
+              alumnoId={detalleAlumno.id}
+              logros={detalleAlumno.logros || []}
+              puedeEditar={!esTutor}
+              onCambio={() => verDetalle(detalleAlumno.id)}
+            />
 
             <div>
               <p className="text-sm font-medium text-gray-700 mb-1">Horarios</p>

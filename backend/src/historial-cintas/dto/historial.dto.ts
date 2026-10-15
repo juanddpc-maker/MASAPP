@@ -5,10 +5,12 @@ export class CreateHistorialDto {
   @IsString() cintaId: string;
   @IsOptional() @IsDateString() fechaObtencion?: string;
   @IsOptional() @IsString() instructor?: string;
+  @IsOptional() @IsString() diplomaNuevo?: string;
 }
 
 export class UpdateHistorialDto {
   @IsOptional() @IsString() cintaId?: string;
   @IsOptional() @IsDateString() fechaObtencion?: string;
   @IsOptional() @IsString() instructor?: string;
+  @IsOptional() @IsString() diplomaNuevo?: string;
 }

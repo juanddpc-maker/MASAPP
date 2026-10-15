@@ -61,10 +61,20 @@ export class EventosService {
       });
       if (!cinta) continue; // salvaguarda por si el catálogo cambió entre medio
 
+      // Diploma anterior: el diploma del último cambio de cinta que ya tenía el alumno
+      const previo = await this.prisma.historialCinta.findFirst({
+        where: { alumnoId: candidato.alumnoId, eventoCandidatoId: { not: candidato.id } },
+        orderBy: { fechaObtencion: 'desc' },
+      });
       await this.prisma.historialCinta.upsert({
         where: { eventoCandidatoId: candidato.id },
         update: { cintaId: cinta.id },
-        create: { alumnoId: candidato.alumnoId, cintaId: cinta.id, eventoCandidatoId: candidato.id },
+        create: {
+          alumnoId: candidato.alumnoId,
+          cintaId: cinta.id,
+          eventoCandidatoId: candidato.id,
+          diplomaAnterior: previo?.diplomaNuevo ?? null,
+        },
       });
       await this.prisma.alumno.update({
         where: { id: candidato.alumnoId },

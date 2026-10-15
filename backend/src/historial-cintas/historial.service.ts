@@ -14,13 +14,27 @@ export class HistorialService {
     });
   }
 
-  create(dto: CreateHistorialDto) {
+  // Diploma anterior = diploma del registro inmediatamente previo (por fecha). Es una copia
+  // al momento de crear el registro y no se edita después.
+  async diplomaPrevio(alumnoId: string, fecha: Date): Promise<string | null> {
+    const previo = await this.prisma.historialCinta.findFirst({
+      where: { alumnoId, fechaObtencion: { lte: fecha } },
+      orderBy: { fechaObtencion: 'desc' },
+    });
+    return previo?.diplomaNuevo ?? null;
+  }
+
+  async create(dto: CreateHistorialDto) {
+    const fecha = dto.fechaObtencion ? new Date(dto.fechaObtencion) : new Date();
+    const diplomaAnterior = await this.diplomaPrevio(dto.alumnoId, fecha);
     return this.prisma.historialCinta.create({
       data: {
         alumnoId: dto.alumnoId,
         cintaId: dto.cintaId,
-        fechaObtencion: dto.fechaObtencion ? new Date(dto.fechaObtencion) : new Date(),
+        fechaObtencion: fecha,
         instructor: dto.instructor,
+        diplomaNuevo: dto.diplomaNuevo?.trim() || null,
+        diplomaAnterior,
       },
       include: { cinta: true },
     });
@@ -35,6 +49,7 @@ export class HistorialService {
         cintaId: dto.cintaId,
         fechaObtencion: dto.fechaObtencion ? new Date(dto.fechaObtencion) : undefined,
         instructor: dto.instructor,
+        diplomaNuevo: dto.diplomaNuevo === undefined ? undefined : dto.diplomaNuevo.trim() || null,
       },
       include: { cinta: true },
     });
