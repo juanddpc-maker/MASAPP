@@ -110,9 +110,9 @@ export default function ReporteAlumno({ alumnoId, onCerrar }) {
         {/* Encabezado */}
         <div className="flex items-center justify-between gap-4 pb-4" style={{ borderBottom: `3px solid ${AZUL}` }}>
           <div className="flex items-center gap-3 min-w-0">
-            {escuela?.logoUrl && <img src={escuela.logoUrl} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />}
+            {escuela?.logoUrl && <img src={escuela.logoUrl} alt="" className="rounded-lg object-contain flex-shrink-0" style={{ width: 96, height: 96 }} />}
             <div className="min-w-0">
-              <p className="text-lg font-semibold truncate">{escuela?.nombre || 'Escuela de artes marciales'}</p>
+              <p className="text-xl font-semibold truncate">{escuela?.nombre || 'Escuela de artes marciales'}</p>
               <p className="text-xs text-gray-500">Reporte de progreso del alumno</p>
             </div>
           </div>
