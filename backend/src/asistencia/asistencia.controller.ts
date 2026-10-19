@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Query, Param, Body, Req, UseGuards } from '@nestjs/common';
 import { AsistenciaService } from './asistencia.service';
 import { MarcarAsistenciaDto } from './dto/asistencia.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -19,6 +19,13 @@ export class AsistenciaController {
   @Post('marcar')
   marcar(@Body() dto: MarcarAsistenciaDto) {
     return this.service.marcar(dto);
+  }
+
+  // Admin, instructor y tutor (el tutor solo ve a sus propios alumnos; se valida en el service)
+  @Get('resumen/:alumnoId')
+  @Roles('ADMINISTRADOR', 'INSTRUCTOR', 'TUTOR')
+  resumen(@Param('alumnoId') alumnoId: string, @Query('meses') meses: string, @Req() req: any) {
+    return this.service.resumen(alumnoId, req.user, meses);
   }
 
   @Get('historial/:horarioId')

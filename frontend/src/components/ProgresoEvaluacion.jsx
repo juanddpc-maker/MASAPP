@@ -17,7 +17,7 @@ function Dato({ etiqueta, valor, color }) {
 }
 
 // Progreso de evaluaciones mensuales: radar del periodo elegido + evolución del promedio mes a mes.
-export default function ProgresoEvaluacion({ alumnoId }) {
+export default function ProgresoEvaluacion({ alumnoId, grande = false }) {
   const [evaluaciones, setEvaluaciones] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
@@ -73,10 +73,10 @@ export default function ProgresoEvaluacion({ alumnoId }) {
       </div>
 
       {radar.length >= 3 ? (
-        <ResponsiveContainer width="100%" height={230}>
-          <RadarChart data={radar} outerRadius="70%">
+        <ResponsiveContainer width="100%" height={grande ? 400 : 230}>
+          <RadarChart data={radar} outerRadius={grande ? '75%' : '70%'}>
             <PolarGrid stroke="#e5e7eb" />
-            <PolarAngleAxis dataKey="nombre" tick={{ fontSize: 11, fill: '#374151' }} />
+            <PolarAngleAxis dataKey="nombre" tick={{ fontSize: grande ? 13 : 11, fill: '#374151' }} />
             <PolarRadiusAxis domain={[0, 10]} tick={{ fontSize: 9, fill: '#9ca3af' }} tickCount={6} />
             <Radar dataKey="valor" stroke={COLOR_TOTAL} fill={COLOR_TOTAL} fillOpacity={0.3} />
             <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }} />
@@ -95,7 +95,7 @@ export default function ProgresoEvaluacion({ alumnoId }) {
       {evaluaciones.length > 1 && (
         <div>
           <p className="text-xs font-medium text-gray-500 mb-1">Progreso mes a mes</p>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={grande ? 300 : 200}>
             <LineChart data={linea} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
               <XAxis dataKey="periodo" tick={{ fontSize: 10 }} />

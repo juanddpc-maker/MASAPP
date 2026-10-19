@@ -704,7 +704,7 @@ export default function Alumnos() {
               </div>
             </div>
 
-            {!esTutor && <ProgresoEvaluacion key={detalleAlumno.id} alumnoId={detalleAlumno.id} />}
+            <ProgresoEvaluacion key={detalleAlumno.id} alumnoId={detalleAlumno.id} />
 
             <div className="pt-2 border-t border-gray-100">
               {!mostrarComunicacion ? (

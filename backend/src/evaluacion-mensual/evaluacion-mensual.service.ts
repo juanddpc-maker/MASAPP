@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { GuardarEvaluacionDto } from './dto/evaluacion-mensual.dto';
 
@@ -89,7 +89,13 @@ export class EvaluacionMensualService {
   }
 
   // Progreso del alumno: una fila por periodo (más antiguo primero) con promedios
-  async progreso(alumnoId: string) {
+  async progreso(alumnoId: string, usuario: any) {
+    if (usuario?.rol === 'TUTOR') {
+      const alumno = await this.prisma.alumno.findUnique({ where: { id: alumnoId }, include: { tutores: true } });
+      if (!alumno || !alumno.tutores.some((t) => t.tutorId === usuario.tutorId)) {
+        throw new ForbiddenException('No tienes acceso a este alumno');
+      }
+    }
     const evaluaciones = await this.prisma.evaluacionMensual.findMany({
       where: { alumnoId },
       include: { periodo: true, valores: { include: { atributo: true } } },

@@ -114,7 +114,7 @@ export default function FotosAlumno({ alumnoId, puedeEditar }) {
               <button onClick={() => setAmpliada(f)} className="block w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
                 {f.url && <img src={f.url} alt={f.nota || 'Foto'} className="w-full h-full object-cover" loading="lazy" />}
               </button>
-              <p className="text-[11px] text-gray-500 mt-0.5">{new Date(f.fecha).toLocaleDateString()}</p>
+              <p className="text-[11px] text-gray-500 mt-0.5">{new Date(f.fecha).toLocaleDateString(undefined, { timeZone: 'UTC' })}</p>
               {puedeEditar && (
                 <button onClick={() => eliminar(f.id)} className="absolute top-1 right-1 bg-white/90 rounded-full p-1 text-gray-500 hover:text-red-600">
                   <Trash2 size={12} />
@@ -130,7 +130,7 @@ export default function FotosAlumno({ alumnoId, puedeEditar }) {
           <button className="absolute top-4 right-4 text-white"><X size={24} /></button>
           <div className="max-w-full max-h-full text-center" onClick={(e) => e.stopPropagation()}>
             <img src={ampliada.url} alt="" className="max-h-[80vh] max-w-full rounded-lg mx-auto" />
-            <p className="text-white text-sm mt-2">{new Date(ampliada.fecha).toLocaleDateString()}{ampliada.nota ? ` · ${ampliada.nota}` : ''}</p>
+            <p className="text-white text-sm mt-2">{new Date(ampliada.fecha).toLocaleDateString(undefined, { timeZone: 'UTC' })}{ampliada.nota ? ` · ${ampliada.nota}` : ''}</p>
           </div>
         </div>
       )}

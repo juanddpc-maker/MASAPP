@@ -28,9 +28,10 @@ export class EvaluacionMensualController {
     return this.service.guardar(dto, req.user.userId);
   }
 
+  // También lo ve el tutor, solo de sus propios alumnos (se valida en el service)
   @Get('alumno/:alumnoId')
-  @Roles('ADMINISTRADOR', 'INSTRUCTOR')
-  progreso(@Param('alumnoId') alumnoId: string) {
-    return this.service.progreso(alumnoId);
+  @Roles('ADMINISTRADOR', 'INSTRUCTOR', 'TUTOR')
+  progreso(@Param('alumnoId') alumnoId: string, @Req() req: any) {
+    return this.service.progreso(alumnoId, req.user);
   }
 }
